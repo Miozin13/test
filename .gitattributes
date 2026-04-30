@@ -1,0 +1,10 @@
+конкретный filter=lfs diff=lfs merge=lfs -text
+файл: filter=lfs diff=lfs merge=lfs -text
+git filter=lfs diff=lfs merge=lfs -text
+lfs filter=lfs diff=lfs merge=lfs -text
+track filter=lfs diff=lfs merge=lfs -text
+myapp.exe filter=lfs diff=lfs merge=lfs -text
+XBrowser.exe filter=lfs diff=lfs merge=lfs -text
+\# filter=lfs diff=lfs merge=lfs -text
+или filter=lfs diff=lfs merge=lfs -text
+укажи filter=lfs diff=lfs merge=lfs -text
