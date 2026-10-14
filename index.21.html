@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pack RNG — открывай паки с банковскими картами!</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+:root{--bg:#070818;--glass:rgba(255,255,255,.065);--stroke:rgba(255,255,255,.12);--muted:#a7add0;--gold:#ffd43b}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:#fff;min-height:100vh;padding:0 14px 70px;overflow-x:hidden}
+/* ---------- BACKGROUND ---------- */
+.bg{position:fixed;inset:0;z-index:-2;background:
+ radial-gradient(900px 480px at 15% -5%,rgba(108,92,231,.35),transparent 60%),
+ radial-gradient(800px 480px at 88% 8%,rgba(255,0,128,.20),transparent 60%),
+ radial-gradient(700px 600px at 50% 110%,rgba(0,212,255,.16),transparent 60%),var(--bg)}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);z-index:-1;opacity:.55;animation:drift 14s ease-in-out infinite alternate;pointer-events:none}
+.orb.a{width:340px;height:340px;background:#6c5ce7;top:-90px;left:-70px}
+.orb.b{width:300px;height:300px;background:#e84393;top:12%;right:-90px;animation-delay:-6s}
+.orb.c{width:260px;height:260px;background:#0984e3;bottom:-80px;left:38%;animation-delay:-3s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(50px,36px) scale(1.12)}}
+.spark{position:fixed;top:-20px;z-index:0;pointer-events:none;opacity:.7;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(108vh) rotate(340deg)}}
+.wrap{max-width:1020px;margin:0 auto;position:relative;z-index:1}
+/* ---------- HEADER ---------- */
+header{text-align:center;padding:34px 0 4px}
+.badge{display:inline-flex;gap:8px;align-items:center;background:var(--glass);border:1px solid var(--stroke);backdrop-filter:blur(12px);padding:7px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:2px;color:#d9dcff}
+.badge i{width:8px;height:8px;border-radius:50%;background:#2ee59d;box-shadow:0 0 12px #2ee59d;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.logo{font-size:clamp(44px,9vw,74px);font-weight:1000;line-height:1.02;letter-spacing:-1px;margin-top:14px;
+ background:linear-gradient(92deg,#fff 5%,#ffd43b 28%,#ff6b9d 52%,#a29bfe 76%,#4dd8ff 98%);background-size:220% 100%;
+ -webkit-background-clip:text;background-clip:text;color:transparent;animation:shineTxt 6s linear infinite;filter:drop-shadow(0 8px 32px rgba(162,155,254,.28))}
+@keyframes shineTxt{to{background-position:220% 0}}
+.sub{color:var(--muted);margin-top:10px;font-size:16px}.sub b{color:#fff}
+.marquee{margin:18px auto 4px;max-width:760px;overflow:hidden;border:1px solid var(--stroke);background:rgba(255,255,255,.045);border-radius:999px;padding:9px 0;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.marquee div{display:flex;gap:34px;white-space:nowrap;width:max-content;animation:mq 24s linear infinite;font-size:13px;font-weight:700;color:#d7daf5}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* ---------- TOP BAR ---------- */
+.topbar{position:sticky;top:12px;z-index:20;display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:20px 0 4px;padding:10px;border-radius:22px;background:rgba(13,15,35,.72);border:1px solid var(--stroke);backdrop-filter:blur(16px);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.pill{background:var(--glass);border:1px solid var(--stroke);border-radius:14px;padding:10px 14px;font-weight:750;display:flex;gap:7px;align-items:center;font-size:14px}
+.pill b{color:var(--gold);font-size:16px}
+button{cursor:pointer;border:none;color:#fff;font-weight:850;border-radius:14px;padding:11px 16px;transition:.18s;font-size:14px}
+button:hover{transform:translateY(-2px);filter:brightness(1.12)}button:active{transform:scale(.96)}
+.btn-gold{background:linear-gradient(135deg,#ff9f00,#ffd43b);color:#2a1b00;box-shadow:0 8px 24px rgba(255,180,0,.32)}
+.btn-work{background:linear-gradient(135deg,#00a47c,#2ee59d);color:#00281b;box-shadow:0 8px 24px rgba(46,229,157,.25)}
+.btn-violet{background:linear-gradient(135deg,#6c5ce7,#a29bfe);box-shadow:0 8px 24px rgba(108,92,231,.35)}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid var(--stroke)}
+h2{margin:34px 0 6px;font-size:clamp(21px,4vw,27px);font-weight:950;display:flex;align-items:center;gap:10px}
+.hint{color:var(--muted);font-size:14px;line-height:1.55;font-weight:500}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap}
+/* ---------- PACKS ---------- */
+.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:14px;margin-top:14px}
+.pack{border-radius:24px;padding:12px;text-align:center;border:1px solid var(--stroke);position:relative;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));backdrop-filter:blur(10px);transition:.25s;overflow:hidden;transform-style:preserve-3d}
+.pack:hover{transform:translateY(-7px);border-color:rgba(255,255,255,.28);box-shadow:0 24px 50px rgba(0,0,0,.42)}
+.pack-art{height:138px;border-radius:18px;position:relative;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.22)}
+.pack-art:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.13) 0 9px,transparent 9px 18px);opacity:.5}
+.pack-art:after{content:"";position:absolute;inset:-40%;background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.5) 50%,transparent 58%);transform:translateX(-70%);animation:foil 3.4s ease-in-out infinite}
+@keyframes foil{0%,55%{transform:translateX(-75%) rotate(0.001deg)}90%,100%{transform:translateX(75%)}}
+.pack-art .pe{font-size:58px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.45));animation:float 2.6s ease-in-out infinite;z-index:1}
+@keyframes float{50%{transform:translateY(-8px) rotate(-3deg) scale(1.05)}}
+.pack-art .tear{position:absolute;top:0;left:0;right:0;height:10px;z-index:2;background:repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 10px,rgba(255,255,255,.18) 10px 20px)}
+.pack-art .pname{position:absolute;bottom:9px;z-index:2;font-size:10px;font-weight:1000;letter-spacing:2.5px;background:rgba(0,0,0,.42);padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.2)}
+.pa-common{background:linear-gradient(150deg,#8d99ae,#495057)} .pa-rare{background:linear-gradient(150deg,#00c2ff,#0652dd)}
+.pa-epic{background:linear-gradient(150deg,#a55eea,#5f27cd)} .pa-mythic{background:linear-gradient(150deg,#ff4d6d,#8e2de2)}
+.pa-legendary{background:linear-gradient(150deg,#ffb400,#ff7847)} .pa-secret{background:linear-gradient(150deg,#12c2e9,#c471ed,#f64f59)}
+.pack h3{margin:12px 0 3px;font-size:17px}.price{color:var(--gold);font-weight:950}.price small{color:var(--muted)}
+.odds{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:11px 0;min-height:58px;align-content:flex-start}
+.odd{font-size:10.5px;font-weight:800;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.11);padding:4px 7px;border-radius:999px;color:#e7e9ff}
+.pack button{width:100%}
+.pack.best{outline:2px solid rgba(255,212,59,.65);box-shadow:0 0 34px rgba(255,180,0,.18)}
+.tag{position:absolute;top:20px;right:-32px;z-index:3;transform:rotate(38deg);background:#ffd43b;color:#221600;font-size:10px;font-weight:1000;letter-spacing:1px;padding:5px 38px;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+/* ---------- RARITY STRIP ---------- */
+.rarities{display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:10px;margin-top:14px}
+.rar-card{border-radius:18px;padding:13px;background:var(--glass);border:1px solid var(--stroke)}
+.rar-card .top{display:flex;justify-content:space-between;font-weight:900;font-size:13px}
+.bar{height:8px;background:rgba(255,255,255,.1);border-radius:99px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .6s}
+/* ---------- STATS ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:11px;margin-top:14px}
+.stat{background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border:1px solid var(--stroke);border-radius:19px;padding:16px 13px;text-align:center}
+.stat .ic{font-size:21px}.stat b{font-size:21px;display:block;margin:4px 0 2px}.stat span{color:var(--muted);font-size:12px;font-weight:700}
+/* ---------- BANK CARD ---------- */
+.bcard{width:272px;max-width:87vw;aspect-ratio:1.586;border-radius:20px;padding:17px 18px;text-align:left;position:relative;overflow:hidden;box-shadow:0 22px 46px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.35);isolation:isolate}
+.bcard:before{content:"";position:absolute;width:230px;height:230px;border-radius:50%;right:-80px;top:-95px;background:rgba(255,255,255,.16);z-index:-1}
+.bcard:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;right:-28px;top:-55px;border:24px solid rgba(255,255,255,.09);z-index:-1}
+.bcard .shine{position:absolute;inset:-45%;background:linear-gradient(105deg,transparent 43%,rgba(255,255,255,.42) 50%,transparent 57%);transform:translateX(-75%);animation:foil 4.2s ease-in-out infinite;z-index:0}
+.bcard>*{position:relative;z-index:1}
+.bankline{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.bank{font-weight:1000;font-size:14px;letter-spacing:.7px;text-transform:uppercase;line-height:1.15;text-shadow:0 2px 8px rgba(0,0,0,.25)}
+.pay{font-size:9px;font-weight:1000;letter-spacing:1.6px;opacity:.75;margin-top:3px}
+.rarbadge{font-size:10px;font-weight:1000;letter-spacing:.8px;background:rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.28);padding:5px 8px;border-radius:999px;white-space:nowrap;backdrop-filter:blur(4px)}
+.mid{display:flex;align-items:center;gap:12px;margin-top:15px}
+.chip{width:40px;height:30px;flex:none;border-radius:7px;background:linear-gradient(145deg,#fff0a6,#d9a400 55%,#fff0a6);border:1px solid rgba(70,45,0,.45);position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.chip:before,.chip:after{content:"";position:absolute;left:5px;right:5px;height:1px;background:rgba(80,55,0,.55)}
+.chip:before{top:9px}.chip:after{bottom:9px}
+.waves{font-size:21px;transform:rotate(90deg);opacity:.85;font-weight:900}
+.num{font-family:ui-monospace,Consolas,monospace;font-size:16.5px;letter-spacing:1.7px;margin-top:11px;text-shadow:0 2px 5px rgba(0,0,0,.3);font-weight:700}
+.row{display:flex;justify-content:space-between;gap:12px;margin-top:11px;font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.94}
+.row b{display:block;font-size:11px;margin-top:2px;letter-spacing:.2px}
+.cardfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.val{font-weight:1000;background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.18);padding:5px 9px;border-radius:999px;font-size:12px}
+.holo{width:31px;height:31px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,#7ef9ff 25%,#ff8be9 55%,#7c5cff);opacity:.9;box-shadow:0 0 16px rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.5)}
+.rar-common{background:linear-gradient(140deg,#7f8c8d,#232526)} .rar-rare{background:linear-gradient(140deg,#00a8ff,#0652dd 58%,#00b894)}
+.rar-epic{background:linear-gradient(140deg,#8e2de2,#5f27cd 55%,#341f97)} .rar-mythic{background:linear-gradient(140deg,#eb3b5a,#a55eea 65%,#4a0e4e)}
+.rar-legendary{background:linear-gradient(140deg,#f6b93b,#e58e26 45%,#ffd76e);color:#2b1a00}
+.rar-legendary .rarbadge,.rar-legendary .val{background:rgba(60,32,0,.34);color:#fff}
+.rar-secret{background:linear-gradient(120deg,#0f0c29,#8e2de2,#ff0080,#00c9ff,#0f0c29);background-size:260% 260%;animation:secretBg 4s ease infinite;border:1.5px solid rgba(255,255,255,.65)}
+@keyframes secretBg{50%{background-position:100% 50%}}
+/* reveal */
+.reveal .bcard{opacity:0;transform:rotateY(92deg) translateY(28px) scale(.82)}
+.reveal .bcard.show{animation:flip .68s cubic-bezier(.2,.9,.25,1.25) forwards}
+@keyframes flip{to{opacity:1;transform:rotateY(0) translateY(0) scale(1)}}
+.reveal .bcard.legendaryFx{box-shadow:0 0 0 2px #ffe66d,0 0 55px #ffb400,0 24px 50px rgba(0,0,0,.5)}
+.reveal .bcard.secretFx{box-shadow:0 0 0 2px #fff,0 0 70px #ff00cc,0 0 110px #6c5ce7,0 24px 50px rgba(0,0,0,.5)}
+/* ---------- INVENTORY ---------- */
+.inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:14px;margin-top:8px}
+.inv .bcard{width:100%;max-width:none}
+.inv-item{display:flex;flex-direction:column;gap:8px}
+.sell-btn{background:linear-gradient(135deg,#00a47c,#2ee59d);color:#00281b;box-shadow:0 8px 20px rgba(46,229,157,.22);width:100%;padding:12px}
+.sell-btn:hover{box-shadow:0 12px 26px rgba(46,229,157,.35)}
+.sell-rare{background:linear-gradient(135deg,#ff9f00,#ffd43b);color:#2a1b00}
+.sell-secret{background:linear-gradient(135deg,#8e2de2,#ff0080);color:#fff}
+.inv-empty{background:var(--glass);border:1.5px dashed rgba(255,255,255,.28);border-radius:20px;padding:32px 20px;text-align:center;color:var(--muted);grid-column:1/-1;line-height:1.6}
+.inv-empty .big{font-size:42px;display:block;margin-bottom:7px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:13px 0 5px}.filters button{padding:8px 13px;font-size:13px}
+.filters .active{background:linear-gradient(135deg,#6c5ce7,#e84393);box-shadow:0 8px 22px rgba(232,67,147,.3)}
+/* ---------- MODAL ---------- */
+.overlay{position:fixed;inset:0;background:rgba(4,5,17,.86);backdrop-filter:blur(10px);display:none;place-items:center;z-index:50;padding:16px;overflow:auto}
+.overlay.show{display:grid}
+.modal{max-width:920px;width:100%;text-align:center;padding:26px 8px}
+.bigpack{font-size:clamp(92px,20vw,142px);display:inline-block;filter:drop-shadow(0 24px 42px rgba(0,0,0,.55))}
+.shaking{animation:shake .48s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:rotate(-5deg) scale(1.04)}50%{transform:rotate(5deg) scale(1.14)}}
+.burst{animation:burst .55s cubic-bezier(.2,.9,.3,1.4) forwards}
+@keyframes burst{35%{transform:scale(1.35) rotate(7deg)}100%{transform:scale(.2);opacity:0}}
+.reveal{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:20px;perspective:1200px}
+.flash{position:fixed;inset:0;background:radial-gradient(circle,#fff8c9,rgba(255,190,0,.45) 36%,transparent 70%);opacity:0;pointer-events:none;z-index:70}
+.flash.go{animation:flashA .85s ease-out}
+@keyframes flashA{15%{opacity:1}100%{opacity:0}}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(90px);background:#fff;color:#111;padding:13px 19px;border-radius:999px;font-weight:900;transition:.32s;z-index:99;max-width:92vw;text-align:center;box-shadow:0 18px 45px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%)}
+.confetti{position:fixed;top:-16px;z-index:80;pointer-events:none;border-radius:3px;animation:fall linear forwards}
+.footer{margin-top:34px;text-align:center;color:var(--muted);font-size:13.5px;line-height:1.65}
+.reset{margin-top:13px}
+@media(max-width:560px){.topbar{position:static}.pack-art{height:122px}.rarities{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div><div class="flash" id="flash"></div>
+<div class="wrap">
+  <header>
+    <div class="badge"><i></i> ONLINE • RNG ИГРА</div>
+    <div class="logo">PACK RNG</div>
+    <div class="sub">Открывай паки • Выбивай <b>банковские карты</b> • Собери легендарную <b>SECRET</b> 🌈</div>
+    <div class="marquee"><div id="mq"></div></div>
+  </header>
+
+  <div class="topbar">
+    <div class="pill">🪙 <span>Баланс</span> <b id="balance">0</b></div>
+    <div class="pill">🃏 <span>Карт</span> <b id="count">0</b></div>
+    <div class="pill">🎁 <span>Паков</span> <b id="opened">0</b></div>
+    <button class="btn-work" onclick="work()">💼 Работать +25</button>
+    <button class="btn-gold" onclick="daily()">🎁 Бонус дня</button>
+    <button class="btn-violet" onclick="sellDupes()">💸 Продать дубли</button>
+    <button class="btn-ghost" id="tgBtn" style="display:none" onclick="sendToBot()">📤 В бота</button>
+  </div>
+
+  <div class="sec-head"><h2>🎁 Магазин паков</h2><div class="hint">В каждом паке — <b style="color:#fff">3 карты</b>. Дороже пак = жирнее дроп!</div></div>
+  <div class="packs" id="packs"></div>
+
+  <h2>🏆 Твоя редкость</h2>
+  <div class="hint">Собирай все 6 уровней редкости — от обычной карты до сияющего SECRET.</div>
+  <div class="rarities" id="rarities"></div>
+
+  <h2>📊 Профиль</h2><div class="stats" id="stats"></div>
+
+  <div class="sec-head"><h2>🃏 Моя коллекция</h2><div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn-work" onclick="sellDupes()">💸 Продать дубли</button>
+    <button class="btn-ghost" onclick="sellByRarity('common')">Продать все ⚪ обычные</button>
+    <button class="btn-ghost" onclick="document.getElementById('packs').scrollIntoView({behavior:'smooth'})">🎁 Открыть ещё</button></div></div>
+  <div class="hint" style="margin-top:6px">Под каждой картой — кнопка продажи. Легендарки и SECRET бот переспросит, чтобы случайно не продать 😅</div>
+  <div class="filters" id="filters"></div>
+  <div class="inv" id="inv"></div>
+
+  <div class="footer">Прогресс автоматически сохраняется в браузере • Продавай дубли и копи на паки дороже 💎<br>
+  Та же игра для Telegram находится в файлах <b style="color:#fff">bot.py</b> и <b style="color:#fff">README.md</b> 📲
+  <div class="reset"><button class="btn-ghost" onclick="if(confirm('Сбросить весь прогресс?')){localStorage.removeItem('packrng');location.reload()}">🗑 Сбросить прогресс</button></div></div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal">
+  <div class="bigpack shaking" id="bigpack">🎁</div>
+  <h2 id="openTitle" style="justify-content:center">Открываем...</h2>
+  <div class="hint" id="openSub">Удача уже крутит рулетку… 🎲</div>
+  <div class="reveal" id="reveal"></div>
+  <div style="margin-top:24px;display:none" id="closeWrap">
+    <button class="btn-gold" onclick="closeModal()">✅ Забрать карты</button>
+    <button class="btn-ghost" onclick="closeModal()">Закрыть</button>
+  </div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const RARITY={
+ common:{name:'Обычная',emoji:'⚪',color:'#a4b0be'},rare:{name:'Редкая',emoji:'🔵',color:'#00a8ff'},
+ epic:{name:'Эпическая',emoji:'🟣',color:'#a55eea'},mythic:{name:'Мифическая',emoji:'🔴',color:'#ff4d6d'},
+ legendary:{name:'Легендарная',emoji:'🟡',color:'#ffb400'},secret:{name:'SECRET',emoji:'🌈',color:'#ff4dff'}};
+const POOL={
+ common:[['НеоБанк','Classic Debit',40],['Мир Пэй','Старт',50],['Сбер Старт','Молодёжная',55],['Почта Банк','Базовая',45],['Киви Банк','Лайт',60]],
+ rare:[['Т-Пэй','Blue Metal',150],['Альфа Стиль','Travel',180],['ВТБ Плюс','Кэшбэк Pro',170],['Райф Рай','Silver',200],['НеоБанк','Neon',190]],
+ epic:[['Империал','Purple Elite',500],['Альфа Стиль','Premium',620],['Gold Line','Sapphire',580],['Т-Пэй','Black Junior',700],['Север Банк','Aurora',650]],
+ mythic:[['Империал','Dragon Card',1600],['Obsidian','Mythic One',1900],['Gold Line','Phoenix',2100],['Космо Банк','Galaxy',2300],['Альфа Стиль','Eclipse',2000]],
+ legendary:[['Imperial Gold','Solid GOLD',5500],['Obsidian','Legenda 24K',7000],['Royal Vault','King Card',8000],['Gold Line','Золотой Резерв',6500]],
+ secret:[['??? UNKNOWN','RAINBOW INFINITE',25000],['VOID BANK','BLACK HOLE CARD',40000],['GOD VAULT','КАРТА БОГА 👑',60000]]};
+const PACKS=[
+ {id:'common',name:'Обычный',emoji:'📦',price:100,odds:{common:70,rare:25,epic:4.5,mythic:0.5}},
+ {id:'rare',name:'Редкий',emoji:'💙',price:300,odds:{common:40,rare:40,epic:17,mythic:2.8,legendary:0.2}},
+ {id:'epic',name:'Эпический',emoji:'💜',price:800,odds:{common:15,rare:35,epic:35,mythic:13,legendary:1.9,secret:0.1}},
+ {id:'mythic',name:'Мифический',emoji:'❤️',price:2000,odds:{rare:15,epic:35,mythic:35,legendary:13,secret:2}},
+ {id:'legendary',name:'Легендарный',emoji:'💛',price:5000,tag:'ВЫГОДНО',odds:{epic:20,mythic:35,legendary:35,secret:10}},
+ {id:'secret',name:'SECRET',emoji:'🌈',price:15000,tag:'МАКС. ШАНС',odds:{legendary:50,secret:50}}];
+let S=JSON.parse(localStorage.getItem('packrng')||'null')||{balance:1000,inv:[],opened:0,earned:0,lastDaily:0,filter:'all'};
+const $=id=>document.getElementById(id);
+// ---- Telegram Mini App ----
+const tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
+function haptic(kind='impact',style='medium'){try{if(!tg||!tg.HapticFeedback)return;if(kind==='notif')tg.HapticFeedback.notificationOccurred(style);else tg.HapticFeedback.impactOccurred(style)}catch(e){}}
+if(tg){try{tg.ready();tg.expand();tg.setHeaderColor('#070818');tg.setBackgroundColor('#070818')}catch(e){}
+  if(tg.CloudStorage){tg.CloudStorage.getItem('packrng',(err,val)=>{if(!err&&val){try{let cloud=JSON.parse(val);if(cloud&&typeof cloud.balance==='number'){S=cloud;saveLocal();render();toast('☁️ Прогресс загружен из Telegram')}}catch(e){}}})}}
+function saveLocal(){localStorage.setItem('packrng',JSON.stringify(S))}
+const save=()=>{saveLocal();if(tg&&tg.CloudStorage){try{tg.CloudStorage.setItem('packrng',JSON.stringify(S),()=>{})}catch(e){}}};
+function sendToBot(){if(!tg)return;let total=S.inv.reduce((a,c)=>a+c.value,0);
+  tg.sendData(JSON.stringify({balance:S.balance,opened:S.opened,cards:S.inv.length,totalValue:total,secret:S.inv.filter(c=>c.rar==='secret').length,legendary:S.inv.filter(c=>c.rar==='legendary').length}))}
+function confirmAction(text,cb){if(tg&&tg.showConfirm){tg.showConfirm(text,ok=>{if(ok)cb()})}else if(confirm(text))cb()}
+const fmt=n=>n.toLocaleString('ru-RU');
+function toast(t){let e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2700)}
+function roll(o){let r=Math.random()*100,a=0;for(let k in o){a+=o[k];if(r<a)return k}return Object.keys(o)[0]}
+function makeCard(rar){let p=POOL[rar][Math.floor(Math.random()*POOL[rar].length)];return{rar,bank:p[0],name:p[1],value:Math.round(p[2]*(0.8+Math.random()*0.6)),num:String(Math.floor(1000+Math.random()*9000)),id:Date.now()+Math.random()}}
+function cardHTML(c){let r=RARITY[c.rar];return `<div class="bcard rar-${c.rar}"><span class="shine"></span>
+ <div class="bankline"><div><div class="bank">${c.bank}</div><div class="pay">PACK RNG PAY</div></div><div class="rarbadge">${r.emoji} ${r.name.toUpperCase()}</div></div>
+ <div class="mid"><div class="chip"></div><div class="waves">)))</div><div style="margin-left:auto;font-size:20px">💳</div></div>
+ <div class="num">•••• &nbsp;•••• &nbsp;•••• &nbsp;${c.num}</div>
+ <div class="row"><span>Card Holder<b>LUCKY PLAYER</b></span><span style="text-align:right">Card<b>${c.name}</b></span></div>
+ <div class="cardfoot"><div class="val">💰 ${fmt(c.value)} 🪙</div><div class="holo"></div></div></div>`}
+function render(){
+ $('balance').textContent=fmt(S.balance);$('count').textContent=S.inv.length;$('opened').textContent=S.opened;
+ $('mq').innerHTML=(Array(2).fill(PACKS.map(p=>`<span>${p.emoji} ${p.name} пак — ${fmt(p.price)} 🪙</span>`).join('<span>✦</span>')+'<span>🌈 SECRET КАРТА — до 60 000 🪙</span>').join('<span>✦</span>'));
+ $('packs').innerHTML=PACKS.map(p=>`<div class="pack ${p.id==='legendary'?'best':''}">${p.tag?`<div class="tag">${p.tag}</div>`:''}
+  <div class="pack-art pa-${p.id}"><div class="tear"></div><span class="pe">${p.emoji}</span><span class="pname">PACK RNG</span></div>
+  <h3>${p.name} пак</h3><div class="price">${fmt(p.price)} 🪙 <small>• 3 карты</small></div>
+  <div class="odds">${Object.entries(p.odds).map(([k,v])=>`<span class="odd">${RARITY[k].emoji} ${v}%</span>`).join('')}</div>
+  <button class="${p.id==='secret'?'btn-violet':'btn-gold'}" onclick="openPack('${p.id}')">✨ Открыть пак</button></div>`).join('');
+ let byR={};S.inv.forEach(c=>byR[c.rar]=(byR[c.rar]||0)+1);
+ let max=Math.max(1,...Object.values(byR));
+ $('rarities').innerHTML=Object.entries(RARITY).map(([k,r])=>`<div class="rar-card"><div class="top"><span>${r.emoji} ${r.name}</span><span>${byR[k]||0} шт.</span></div><div class="bar"><i style="width:${(byR[k]||0)/max*100}%;background:${r.color};box-shadow:0 0 12px ${r.color}"></i></div></div>`).join('');
+ let total=S.inv.reduce((a,c)=>a+c.value,0),uniq=new Set(S.inv.map(c=>c.bank+c.name)).size;
+ $('stats').innerHTML=[['🪙',fmt(S.balance),'баланс монет'],['💎',fmt(total)+' 🪙','цена коллекции'],['🗂',uniq,'уникальных карт'],['🌈',byR.secret||0,'SECRET карт'],['🟡',byR.legendary||0,'легендарных'],['🎁',S.opened,'паков открыто']]
+  .map(x=>`<div class="stat"><div class="ic">${x[0]}</div><b>${x[1]}</b><span>${x[2]}</span></div>`).join('');
+ $('filters').innerHTML=['all',...Object.keys(RARITY)].map(r=>`<button class="btn-ghost ${S.filter===r?'active':''}" onclick="S.filter='${r}';save();render()">${r==='all'?'✦ Все карты':RARITY[r].emoji+' '+RARITY[r].name}</button>`).join('');
+ let list=[...S.inv].sort((a,b)=>b.value-a.value).filter(c=>S.filter==='all'||c.rar===S.filter);
+ $('inv').innerHTML=list.length?list.map(c=>{let cls=c.rar==='secret'?'sell-secret':(c.rar==='legendary'||c.rar==='mythic')?'sell-rare':'';
+  return `<div class="inv-item">${cardHTML(c)}<button class="sell-btn ${cls}" onclick="sellCard('${c.id}')">💸 Продать за ${fmt(c.value)} 🪙</button></div>`}).join('')
+  :`<div class="inv-empty"><span class="big">🎴</span><b style="color:#fff">Пока пусто</b><br>Открой свой первый пак выше — удача уже ждёт!</div>`;
+ if(tg)$('tgBtn').style.display='';
+}
+function openPack(id){let p=PACKS.find(x=>x.id===id);
+ if(S.balance<p.price){toast(`❌ Не хватает монет! Нужно ${fmt(p.price)} 🪙 — поработай или забери бонус 💼`);return}
+ S.balance-=p.price;S.opened++;let cards=[makeCard(roll(p.odds)),makeCard(roll(p.odds)),makeCard(roll(p.odds))];
+ S.inv.push(...cards);save();render();
+ $('overlay').classList.add('show');let bp=$('bigpack');bp.textContent=p.emoji;bp.className='bigpack shaking';
+ $('openTitle').textContent='Открываем '+p.name+' пак…';$('openSub').textContent='Рулетка удачи крутится 🎲';$('reveal').innerHTML='';$('closeWrap').style.display='none';
+ setTimeout(()=>{bp.className='bigpack burst';$('openTitle').textContent='💥 ВЗРЫВ УДАЧИ!';flash();
+  setTimeout(()=>{bp.style.display='none';$('openSub').textContent='Вот что тебе выпало:';
+   cards.forEach((c,i)=>setTimeout(()=>{let d=document.createElement('div');d.innerHTML=cardHTML(c);let el=d.firstElementChild;
+     el.classList.add('show');if(c.rar==='legendary')el.classList.add('legendaryFx');if(c.rar==='secret')el.classList.add('secretFx');
+     $('reveal').appendChild(el);if(c.rar==='legendary'||c.rar==='secret'){confetti(c.rar==='secret'?70:42);flash()}
+     if(i===cards.length-1)setTimeout(()=>$('closeWrap').style.display='block',350)},i*520))},420)},950)}
+function closeModal(){$('overlay').classList.remove('show');$('bigpack').style.display='inline-block'}
+function flash(){let f=$('flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
+function work(){S.balance+=25;S.earned+=25;save();render();toast('💼 +25 🪙 за работу! Так держать')}
+function daily(){let now=Date.now();if(now-S.lastDaily<86400000){toast(`⏳ Бонус будет через ~${Math.ceil((86400000-(now-S.lastDaily))/3600000)} ч.`);return}S.lastDaily=now;S.balance+=500;save();render();toast('🎁 +500 🪙 — ежедневный бонус!');confetti(35)}
+function sellDupes(){let seen=new Set(),sum=0,kept=[];for(let c of[...S.inv].sort((a,b)=>b.value-a.value)){let k=c.bank+c.name;if(seen.has(k))sum+=c.value;else{seen.add(k);kept.push(c)}}
+ if(!sum){toast('Дублей пока нет — открывай ещё паки 🎁');return}S.inv=kept;S.balance+=sum;save();render();haptic('notif','success');toast(`💸 Дубли проданы: +${fmt(sum)} 🪙`)}
+function doSell(c){S.inv=S.inv.filter(x=>String(x.id)!==String(c.id));S.balance+=c.value;save();render();haptic('notif','success');toast(`💸 ${c.bank} ${c.name} продана: +${fmt(c.value)} 🪙`)}
+function sellCard(id){let c=S.inv.find(x=>String(x.id)===String(id));if(!c)return;
+ if(c.rar==='legendary'||c.rar==='secret'){confirmAction(`⚠️ Это ${RARITY[c.rar].emoji} ${RARITY[c.rar].name} карта за ${fmt(c.value)} 🪙. Точно продать?`,()=>doSell(c))}
+ else doSell(c)}
+function sellByRarity(rar){let list=S.inv.filter(c=>c.rar===rar);if(!list.length){toast('Таких карт нет');return}
+ let sum=list.reduce((a,c)=>a+c.value,0);confirmAction(`Продать все карты «${RARITY[rar].name}» (${list.length} шт.) за ${fmt(sum)} 🪙?`,()=>{
+ S.inv=S.inv.filter(c=>c.rar!==rar);S.balance+=sum;save();render();haptic('notif','success');toast(`💸 Продано ${list.length} карт: +${fmt(sum)} 🪙`)})}
+function confetti(n=35){let colors=['#ffd43b','#ff6b9d','#6c5ce7','#00d4ff','#2ee59d','#fff'];for(let i=0;i<n;i++){let e=document.createElement('div');e.className='confetti';let s=6+Math.random()*8;e.style.cssText=`left:${Math.random()*100}vw;width:${s}px;height:${s*(Math.random()>.5?1:.45)}px;background:${colors[i%colors.length]};animation-duration:${1.4+Math.random()*1.8}s;transform:rotate(${Math.random()*360}deg)`;document.body.appendChild(e);setTimeout(()=>e.remove(),3600)}}
+// падающие блёстки на фоне
+for(let i=0;i<16;i++){let e=document.createElement('div');e.className='spark';e.textContent='✦';e.style.cssText=`left:${Math.random()*100}vw;font-size:${9+Math.random()*10}px;color:${['#ffd43b','#a29bfe','#ff8be9','#7ef9ff'][i%4]};animation-duration:${7+Math.random()*9}s;animation-delay:-${Math.random()*10}s`;document.body.appendChild(e)}
+render();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
